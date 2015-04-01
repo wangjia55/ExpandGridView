@@ -19,7 +19,7 @@
         android:layout_alignLeft="@+id/avatar_view"
         android:layout_margin="5dp"
         android:src="@drawable/ic_delete"
-        android:visibility="gone"/>
+        android:visibility="invisible"/>
 
     <TextView
         android:id="@+id/text_view_name"

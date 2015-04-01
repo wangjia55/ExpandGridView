@@ -1,5 +1,9 @@
 package jacob.expandgridview;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,12 +31,15 @@ public class GroupMemberAdapter extends BaseAdapter {
 
     private LayoutInflater mLayoutInflater;
 
-    private boolean isDeleteMode = false;
+    public boolean isDeleteMode = false;
+
     public static final int TYPE_ADMIN = 0;
     public static final int TYPE_MEMBER = 1;
 
     private int mType;
     private OnMemberOperationListener mListener;
+
+    private ObjectAnimator mAnimatorMember;
 
     public GroupMemberAdapter(Context context, int type, List<Users> usersList,
                               OnMemberOperationListener memberOperListener) {
@@ -41,12 +48,11 @@ public class GroupMemberAdapter extends BaseAdapter {
         mType = type;
         this.usersList = usersList;
         mListener = memberOperListener;
+
     }
 
     @Override
     public int getCount() {
-        Log.e("TAG", "getCount:");
-
         if (usersList.size() > 0) {
             return usersList.size() + 2;
         }
@@ -86,14 +92,56 @@ public class GroupMemberAdapter extends BaseAdapter {
                 viewHolder.textViewName = (TextView) convertView.findViewById(R.id.text_view_name);
             }
             convertView.setTag(viewHolder);
-            convertView.setOnClickListener(createClickListener(position));
+            convertView.setOnClickListener(createClickListener(convertView, position));
         }
         initializeViews(position, convertView);
         return convertView;
     }
 
 
-    private View.OnClickListener createClickListener(final int position) {
+    private void initializeViews(int position, View convertView) {
+        if (isDeleteMode && (position >= usersList.size())) {
+            convertView.setVisibility(View.INVISIBLE);
+            return;
+        } else {
+            if (mType == TYPE_ADMIN) {
+                convertView.setVisibility(View.VISIBLE);
+            } else {
+                if ((position == getCount() - 1) && (position > usersList.size())) {
+                    convertView.setVisibility(View.INVISIBLE);
+                    return;
+                } else {
+                    convertView.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
+        Users users = getItem(position);
+        if (users == null) return;
+        ViewHolder holder = (ViewHolder) convertView.getTag();
+        Log.e("TAG", "position:" + position);
+
+        if (holder.avatarView == null) {
+            return;
+        }
+        holder.avatarView.setImageResource(users.getAvatar());
+        holder.textViewName.setText(users.getName());
+        if (isDeleteMode) {
+            if (users.getRole() == Users.Role.Admin) {
+                holder.imageViewDelete.setVisibility(View.INVISIBLE);
+            } else {
+                holder.imageViewDelete.setVisibility(View.VISIBLE);
+            }
+        } else {
+            holder.imageViewDelete.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /**
+     * 根据不同位置设置不同的点击事件
+     */
+    private View.OnClickListener createClickListener(View view, final int position) {
+        final View target = view;
         if ((position == getCount() - 1) && !isDeleteMode) {
             return new View.OnClickListener() {
                 @Override
@@ -118,34 +166,25 @@ public class GroupMemberAdapter extends BaseAdapter {
                 @Override
                 public void onClick(View v) {
                     if (isDeleteMode && mListener != null) {
-                        mListener.deleteMember(getItem(position));
+                        PropertyValuesHolder valuesHolderX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1, 0.1f);
+                        PropertyValuesHolder valuesHolderY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1, 0.1f);
+                        mAnimatorMember = ObjectAnimator.ofPropertyValuesHolder(target, valuesHolderX, valuesHolderY).setDuration(200);
+                        mAnimatorMember.addListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                super.onAnimationEnd(animation);
+                                mListener.deleteMember(getItem(position));
+                                target.setScaleX(1);
+                                target.setScaleY(1);
+                            }
+                        });
+                        mAnimatorMember.start();
                     }
                 }
             };
         }
     }
 
-    private void initializeViews(int position, View convertView) {
-        if (isDeleteMode && (position >= usersList.size())) {
-            convertView.setVisibility(View.INVISIBLE);
-        } else {
-            if (mType == TYPE_ADMIN) {
-                convertView.setVisibility(View.VISIBLE);
-            } else {
-                if ((position == getCount() - 1) && (position > usersList.size())) {
-                    convertView.setVisibility(View.INVISIBLE);
-                } else {
-                    convertView.setVisibility(View.VISIBLE);
-                }
-            }
-        }
-        Users users = getItem(position);
-        if (users == null) return;
-        ViewHolder holder = (ViewHolder) convertView.getTag();
-        holder.imageViewDelete.setVisibility(isDeleteMode ? View.VISIBLE : View.GONE);
-        holder.avatarView.setImageResource(users.getAvatar());
-        holder.textViewName.setText(users.getName());
-    }
 
     protected class ViewHolder {
         private RoundImageView avatarView;

@@ -36,8 +36,18 @@ public class Users {
      * 权限，管理员和普通人员
      */
     enum Role {
-        Amin,
+        Admin,
         Member
+    }
+
+
+    @Override
+    public String toString() {
+        return "Users{" +
+                "avatar=" + avatar +
+                ", name='" + name + '\'' +
+                ", role=" + role +
+                '}';
     }
 }
 
