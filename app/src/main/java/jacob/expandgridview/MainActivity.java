@@ -3,12 +3,13 @@ package jacob.expandgridview;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements OnMemberOperationListener {
     private GridView mGridView;
     private GroupMemberAdapter mGroupAdapter;
 
@@ -26,8 +27,19 @@ public class MainActivity extends FragmentActivity {
         mUserList.add(new Users(R.drawable.ic_avatar4, "Jacob", Users.Role.Member));
         mUserList.add(new Users(R.drawable.ic_avatar5, "Richard", Users.Role.Member));
 
-        mGroupAdapter = new GroupMemberAdapter(this, GroupMemberAdapter.TYPE_ADMIN, mUserList);
+        mGroupAdapter = new GroupMemberAdapter(this, GroupMemberAdapter.TYPE_ADMIN, mUserList, this);
         mGridView.setAdapter(mGroupAdapter);
 
     }
+
+    @Override
+    public void clickAddMember() {
+        Toast.makeText(this, "Click Add Member", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void deleteMember(Users users) {
+        Toast.makeText(this, "Delete Member:"+users.getName(), Toast.LENGTH_SHORT).show();
+    }
+
 }
