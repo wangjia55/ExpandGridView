@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,22 +76,11 @@ public class GroupMemberAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             ViewHolder viewHolder = new ViewHolder();
-
-            if (position == getCount() - 1 && !isDeleteMode) {
-                // 删除的按钮
-                convertView = mLayoutInflater.inflate(R.layout.layout_delete_member, null);
-            } else if (position == getCount() - 2 && !isDeleteMode) {
-                //添加的按钮
-                convertView = mLayoutInflater.inflate(R.layout.layout_add_member, null);
-            } else {
-                //普通的成员的布局
-                convertView = mLayoutInflater.inflate(R.layout.layout_menber_item, null);
-                viewHolder.avatarView = (RoundImageView) convertView.findViewById(R.id.avatar_view);
-                viewHolder.imageViewDelete = (ImageView) convertView.findViewById(R.id.image_view_delete);
-                viewHolder.textViewName = (TextView) convertView.findViewById(R.id.text_view_name);
-            }
+            convertView = mLayoutInflater.inflate(R.layout.layout_menber_item, null);
+            viewHolder.avatarView = (RoundImageView) convertView.findViewById(R.id.avatar_view);
+            viewHolder.imageViewDelete = (ImageView) convertView.findViewById(R.id.image_view_delete);
+            viewHolder.textViewName = (TextView) convertView.findViewById(R.id.text_view_name);
             convertView.setTag(viewHolder);
-            convertView.setOnClickListener(createClickListener(convertView, position));
         }
         initializeViews(position, convertView);
         return convertView;
@@ -100,41 +88,51 @@ public class GroupMemberAdapter extends BaseAdapter {
 
 
     private void initializeViews(int position, View convertView) {
-        if (isDeleteMode && (position >= usersList.size())) {
-            convertView.setVisibility(View.INVISIBLE);
-            return;
-        } else {
+        ViewHolder holder = (ViewHolder) convertView.getTag();
+        if (position == getCount() - 1) {
+            //最后一个删除的按钮
+            holder.avatarView.setImageResource(R.drawable.ic_delete_member);
+            holder.textViewName.setText("");
             if (mType == TYPE_ADMIN) {
                 convertView.setVisibility(View.VISIBLE);
             } else {
-                if ((position == getCount() - 1) && (position > usersList.size())) {
-                    convertView.setVisibility(View.INVISIBLE);
-                    return;
-                } else {
-                    convertView.setVisibility(View.VISIBLE);
-                }
-            }
-        }
-
-        Users users = getItem(position);
-        if (users == null) return;
-        ViewHolder holder = (ViewHolder) convertView.getTag();
-        Log.e("TAG", "position:" + position);
-
-        if (holder.avatarView == null) {
-            return;
-        }
-        holder.avatarView.setImageResource(users.getAvatar());
-        holder.textViewName.setText(users.getName());
-        if (isDeleteMode) {
-            if (users.getRole() == Users.Role.Admin) {
+                convertView.setVisibility(View.INVISIBLE);
                 holder.imageViewDelete.setVisibility(View.INVISIBLE);
-            } else {
-                holder.imageViewDelete.setVisibility(View.VISIBLE);
             }
-        } else {
-            holder.imageViewDelete.setVisibility(View.INVISIBLE);
+
+            if (!isDeleteMode) {
+                convertView.setVisibility(View.VISIBLE);
+            } else {
+                convertView.setVisibility(View.INVISIBLE);
+                holder.imageViewDelete.setVisibility(View.INVISIBLE);
+            }
+        }else if(position == getCount()-2){
+            //倒数第二个的添加按钮
+            //最后一个删除的按钮
+            holder.avatarView.setImageResource(R.drawable.ic_add_member);
+            holder.textViewName.setText("");
+            if (!isDeleteMode) {
+                convertView.setVisibility(View.VISIBLE);
+            } else {
+                convertView.setVisibility(View.INVISIBLE);
+                holder.imageViewDelete.setVisibility(View.INVISIBLE);
+            }
+        }else{
+            Users users = getItem(position);
+            if (users == null) return;
+            holder.avatarView.setImageResource(users.getAvatar());
+            holder.textViewName.setText(users.getName());
+            if (isDeleteMode) {
+                if (users.getRole() == Users.Role.Admin) {
+                    holder.imageViewDelete.setVisibility(View.INVISIBLE);
+                } else {
+                    holder.imageViewDelete.setVisibility(View.VISIBLE);
+                }
+            } else {
+                holder.imageViewDelete.setVisibility(View.INVISIBLE);
+            }
         }
+        convertView.setOnClickListener(createClickListener(convertView, position));
     }
 
     /**
